@@ -2,6 +2,10 @@
 
 Un pequeño juego de supervivencia de bloques que funciona en el navegador.
 
+## Jugar en línea
+
+[Abre Bloquecraft](https://mateitoelmascapo308-bot.github.io/bloquecraft/)
+
 ## Cómo jugar
 
 Abre `index.html` en un navegador con conexión a internet. El juego carga Three.js desde una CDN.
