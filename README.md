@@ -13,9 +13,13 @@ Abre `index.html` en un navegador con conexión a internet. El juego carga Three
 - **WASD**, **ZQSD** o flechas: moverse
 - **Espacio**: saltar
 - **Ratón**: mirar
-- **Clic izquierdo / derecho**: romper / colocar bloques
-- **1–5**: elegir bloque
+- **Mantener clic izquierdo**: picar progresivamente y recoger el bloque
+- **Clic derecho**: colocar un bloque del inventario
+- **1–9** o rueda del ratón: elegir ranura de la barra
+- **E**: abrir el inventario; intercambia sus casillas con la ranura seleccionada
 - **V**: alternar primera y tercera persona
 - **Esc**: liberar el ratón
 
 El mundo genera terreno por chunks de 16 × 16 bloques y tiene una capa de bedrock en Y = −32.
+
+Los materiales recogidos se guardan en pilas de hasta 64. Piedra, madera, tierra, césped, arena y hojas tardan tiempos distintos en picarse; la bedrock no se puede romper.

@@ -15,23 +15,38 @@
     #crosshair:before, #crosshair:after { content: ''; position: absolute; background: white; box-shadow: 0 0 2px #000 }
     #crosshair:before { width: 2px; height: 18px; left: 8px }
     #crosshair:after { height: 2px; width: 18px; top: 8px }
-    #hotbar { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; padding: 6px; background: #1119; border: 2px solid #ffffff88; border-radius: 9px }
-    .slot { width: 46px; height: 46px; border: 2px solid #ffffff66; border-radius: 5px; display: grid; place-items: center; background: #252b30aa; font-size: 10px; text-align: center; padding: 2px }
+    #hotbar { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; background: #1119; border: 2px solid #ffffff88; border-radius: 9px }
+    .slot, .inv-slot { position: relative; width: 46px; height: 46px; border: 2px solid #ffffff66; border-radius: 5px; display: grid; place-items: center; background: #252b30dd; font-size: 22px; padding: 2px; color: white }
     .slot.active { border: 3px solid white; background: #ffffff44 }
+    .slot .slot-key { position:absolute;top:0;left:3px;font-size:9px;line-height:11px;color:#fff9 }
+    .slot .slot-count, .inv-slot .slot-count { position:absolute;right:2px;bottom:0;font-size:12px;font-weight:800;line-height:14px;color:white }
+    #mine-progress { position:absolute;left:50%;top:calc(50% + 28px);transform:translateX(-50%);width:190px;padding:5px 8px;background:#111b;border-radius:6px;display:none;font-size:12px }
+    #mine-label { display:block;margin-bottom:4px;text-align:center }
+    #mine-track { width:100%;height:7px;background:#ffffff55;border-radius:5px;overflow:hidden }
+    #mine-fill { width:100%;height:100%;background:#f1d35a;transform:scaleX(0);transform-origin:left center }
+    #inventory-panel { position:fixed;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 24px));padding:18px;background:#17232af2;border:2px solid #ffffffaa;border-radius:12px;box-shadow:0 18px 70px #000a;display:none;pointer-events:auto;text-shadow:0 2px 3px #18252d }
+    #inventory-panel h2 { margin:0 0 5px;font-size:22px }
+    #inventory-panel p { margin:0 0 14px;font-size:12px;color:#c4d4dc }
+    #inventory-grid { display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px }
+    .inv-slot { width:100%;height:auto;aspect-ratio:1;cursor:pointer }
+    .inv-slot:hover { border-color:#8ee27f;background:#ffffff35 }
+    #inventory-panel button { margin-top:14px;width:100%;padding:9px;font-size:14px }
     #toast { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity .2s; background: #101820bb; border-radius: 6px; padding: 7px 12px }
     #overlay { position: fixed; inset: 0; display: grid; place-items: center; background: #10182088; }
     #card { max-width: 440px; margin: 20px; padding: 26px 30px; text-align: center; border: 1px solid #ffffff66; border-radius: 14px; background: #19252aeb; box-shadow: 0 15px 60px #0008 }
     h1 { margin: 0 0 8px; font-size: 30px } p { line-height: 1.55; color: #d5e2e8 } button { pointer-events: auto; cursor: pointer; border: 0; border-radius: 8px; padding: 12px 20px; color: #172027; background: #8ee27f; font-weight: 750; font-size: 16px }
     .muted { font-size: 12px; color: #adc0ca }
+    @media (max-width:600px) { #help {font-size:11px;top:8px;right:8px;padding:6px} #top {top:8px;left:8px;font-size:12px}.slot {width:36px;height:38px;font-size:18px} #hotbar {gap:2px;padding:4px;bottom:12px} }
   </style>
 </head>
 <body>
   <div id="hud">
     <div id="top">🌤️ <b>Modo supervivencia</b><br>Chunks 16×16 · Bedrock Y −32<br><span id="coords"></span></div>
-    <div id="help"><b>WASD / flechas</b> moverse · <b>Espacio</b> saltar<br><b>Ratón</b> mirar · <b>Click izq.</b> romper<br><b>Click der.</b> colocar · <b>1–5</b> bloques<br><b>V</b> primera/tercera persona · <b>Esc</b> liberar ratón</div>
-    <div id="crosshair"></div><div id="toast"></div><div id="hotbar"></div>
+    <div id="help"><b>WASD / flechas</b> moverse · <b>Espacio</b> saltar<br><b>Mantén clic izq.</b> picar · <b>Click der.</b> colocar<br><b>1–9 / rueda</b> elegir · <b>E</b> inventario<br><b>V</b> primera/tercera persona · <b>Esc</b> liberar ratón</div>
+    <div id="crosshair"></div><div id="mine-progress"><span id="mine-label"></span><div id="mine-track"><div id="mine-fill"></div></div></div><div id="toast"></div><div id="hotbar"></div>
   </div>
-  <div id="overlay"><div id="card"><h1>Bloquecraft</h1><p>Explora una pequeña isla de bloques. Tala árboles, excava y construye a tu manera.</p><button id="start">Entrar al mundo</button><p class="muted">Funciona mejor en computador. Haz clic en el juego para volver a capturar el ratón.</p></div></div>
+  <div id="inventory-panel"><h2>Inventario</h2><p>Haz clic en una casilla para intercambiarla con la ranura seleccionada. Pulsa E o usa el botón para volver.</p><div id="inventory-grid"></div><button id="resume-game">Volver al juego</button></div>
+  <div id="overlay"><div id="card"><h1>Bloquecraft</h1><p>Explora un mundo de bloques, recoge materiales y construye a tu manera.</p><button id="start">Entrar al mundo</button><p class="muted">Funciona mejor en computador. Haz clic en el juego para volver a capturar el ratón.</p></div></div>
   <script type="importmap">
     {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}
   </script>
@@ -65,11 +80,11 @@
       }
     }
     function addBlock(x,y,z,type,kind='world'){
-      const k=key(x,y,z);if(blocks.has(k)||(kind==='world'&&removedBlocks.has(k)))return;
+      const k=key(x,y,z);if(blocks.has(k)||(kind==='world'&&removedBlocks.has(k)))return false;
       const b={x,y,z,type},ck=chunkKey(Math.floor(x/CHUNK_SIZE),Math.floor(z/CHUNK_SIZE));blocks.set(k,b);
       if(!chunkBlocks.has(ck))chunkBlocks.set(ck,new Set());chunkBlocks.get(ck).add(k);
       if(kind==='player'){removedBlocks.delete(k);placedBlocks.set(k,b)}
-      if(worldReady&&!batchBlocks)rebuildMeshes();
+      if(worldReady&&!batchBlocks)rebuildMeshes();return true;
     }
     function removeBlock(mesh,instanceId){
       const b=mesh.userData.items[instanceId];if(!b||b.type==='bedrock')return false;
@@ -118,25 +133,82 @@
     avatarPart(.22,.72,.28,avatarMats.skin,-.44,1.02,0);avatarPart(.22,.72,.28,avatarMats.skin,.44,1.02,0);
     avatar.visible=false;scene.add(avatar);let thirdPerson=false;
     const ray = new THREE.Raycaster(); ray.far=6; const center=new THREE.Vector2(0,0), keys={}, velocity=new THREE.Vector3(); let onGround=false, selected=0;
-    const items=[['🌿','grass'],['🟫','dirt'],['🪨','stone'],['🪵','wood'],['🍃','leaves']];
-    const bar=document.querySelector('#hotbar'); items.forEach(([icon,name],i)=>{const d=document.createElement('div');d.className='slot'+(i===0?' active':'');d.innerHTML=`<span>${icon}</span><small>${i+1} ${name}</small>`;bar.appendChild(d)});
-    function select(i){selected=(i+items.length)%items.length;[...bar.children].forEach((e,n)=>e.classList.toggle('active',n===selected));}
+    const items=[
+      {type:'grass',icon:'🌿',name:'Césped'}, {type:'dirt',icon:'🟫',name:'Tierra'}, {type:'stone',icon:'🪨',name:'Piedra'},
+      {type:'wood',icon:'🪵',name:'Madera'}, {type:'leaves',icon:'🍃',name:'Hojas'}, {type:'sand',icon:'🟨',name:'Arena'},
+    ];
+    const inventory=Array.from({length:36},()=>null),bar=document.querySelector('#hotbar'),inventoryGrid=document.querySelector('#inventory-grid');
+    const mineBar=document.querySelector('#mine-progress'),mineFill=document.querySelector('#mine-fill'),mineLabel=document.querySelector('#mine-label');
+    let mining=false,miningKey='',miningProgress=0,inventoryOpen=false,gameStarted=false;
+    for(let i=0;i<9;i++){const d=document.createElement('div');d.className='slot';d.dataset.hotbarSlot=i;bar.appendChild(d)}
+    for(let i=9;i<36;i++){const d=document.createElement('div');d.className='inv-slot';d.dataset.inventorySlot=i;inventoryGrid.appendChild(d)}
+    function select(i){selected=(i+9)%9;renderInventory();}
+    function renderInventory(){
+      [...bar.children].forEach((el,i)=>{
+        const stack=inventory[i],item=stack&&items.find(v=>v.type===stack.type);
+        el.classList.toggle('active',i===selected);el.innerHTML=`<span class="slot-key">${i+1}</span>${item?item.icon:''}${stack?`<span class="slot-count">${stack.count}</span>`:''}`;
+        el.title=stack?`${item.name}: ${stack.count}`:`Ranura ${i+1} vacía`;
+      });
+      [...inventoryGrid.children].forEach((el,i)=>{
+        const stack=inventory[i+9],item=stack&&items.find(v=>v.type===stack.type);
+        el.innerHTML=`${item?item.icon:''}${stack?`<span class="slot-count">${stack.count}</span>`:''}`;
+        el.title=stack?`${item.name}: ${stack.count}`:'Ranura vacía';
+      });
+    }
+    function addToInventory(type){
+      let stack=inventory.find(s=>s&&s.type===type&&s.count<64);
+      if(stack){stack.count++;renderInventory();return true}
+      const empty=inventory.findIndex(s=>!s);if(empty<0)return false;
+      inventory[empty]={type,count:1};renderInventory();return true;
+    }
+    function resetMining(){miningKey='';miningProgress=0;mineBar.style.display='none';mineFill.style.transform='scaleX(0)'}
+    function updateMining(dt){
+      if(!mining||!controls.isLocked){resetMining();return}
+      const hit=target();if(!hit){resetMining();return}
+      const block=hit.object.userData.items[hit.instanceId];if(!block||block.type==='bedrock'){resetMining();return}
+      const blockKey=key(block.x,block.y,block.z);
+      if(blockKey!==miningKey){miningKey=blockKey;miningProgress=0}
+      const data=items.find(item=>item.type===block.type),duration={grass:.55,dirt:.5,stone:1.35,wood:.9,leaves:.28,sand:.45}[block.type]||.7;
+      mineBar.style.display='block';mineLabel.textContent=`Picando ${data?.name||'bloque'}`;
+      miningProgress=Math.min(1,miningProgress+dt/duration);mineFill.style.transform=`scaleX(${miningProgress})`;
+      if(miningProgress>=1){
+        if(addToInventory(block.type)){removeBlock(hit.object,hit.instanceId);toast(`${data?.name||'Bloque'} guardado`)}
+        else toast('Inventario lleno');
+        mining=false;resetMining();
+      }
+    }
+    function resumeGame(){inventoryOpen=false;document.querySelector('#inventory-panel').style.display='none';controls.lock()}
+    renderInventory();
     function target(){ ray.setFromCamera(center,camera); return ray.intersectObjects(blockMeshes,false)[0]; }
     function toast(msg){const t=document.querySelector('#toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.opacity=0,1100)}
-    document.querySelector('#start').onclick=()=>controls.lock(); controls.addEventListener('lock',()=>document.querySelector('#overlay').style.display='none'); controls.addEventListener('unlock',()=>document.querySelector('#overlay').style.display='grid');
+    document.querySelector('#start').onclick=()=>{gameStarted=true;controls.lock()};
+    controls.addEventListener('lock',()=>{inventoryOpen=false;document.querySelector('#inventory-panel').style.display='none';document.querySelector('#overlay').style.display='none'});
+    controls.addEventListener('unlock',()=>{clearKeys();mining=false;resetMining();if(inventoryOpen)document.querySelector('#overlay').style.display='none';else document.querySelector('#overlay').style.display='grid'});
+    document.querySelector('#resume-game').addEventListener('click',resumeGame);
+    inventoryGrid.addEventListener('click',e=>{const slot=e.target.closest('[data-inventory-slot]');if(!slot)return;const i=Number(slot.dataset.inventorySlot),tmp=inventory[selected];inventory[selected]=inventory[i];inventory[i]=tmp;renderInventory()});
     function pressed(...codes){return codes.some(code=>keys[code]===true)}
     function clearKeys(){for(const code in keys)keys[code]=false}
     document.addEventListener('keydown',e=>{
       keys[e.code]=true;
+      if(e.code==='KeyE'&&!e.repeat){
+        if(inventoryOpen)resumeGame();
+        else if(controls.isLocked){inventoryOpen=true;document.querySelector('#inventory-panel').style.display='block';controls.unlock()}
+      }
       if(e.code==='KeyV'&&!e.repeat){thirdPerson=!thirdPerson;avatar.visible=thirdPerson;toast(thirdPerson?'Vista en tercera persona':'Vista en primera persona')}
-      const slot=/^(?:Digit|Numpad)([1-5])$/.exec(e.code);
+      const slot=/^(?:Digit|Numpad)([1-9])$/.exec(e.code);
       if(slot)select(Number(slot[1])-1);
       if(e.code==='Space'&&onGround){velocity.y=8;onGround=false}
     });
     document.addEventListener('keyup',e=>keys[e.code]=false);
     addEventListener('blur',clearKeys);
-    controls.addEventListener('unlock',clearKeys);
-    document.addEventListener('mousedown',e=>{if(!controls.isLocked)return;const hit=target();if(!hit)return;if(e.button===0){toast(removeBlock(hit.object,hit.instanceId)?'Bloque roto':'La bedrock no se puede romper');} if(e.button===2){const n=hit.face.normal, item=hit.object.userData.items[hit.instanceId],px=Math.round(item.x+n.x),py=Math.round(item.y+n.y),pz=Math.round(item.z+n.z);if(Math.abs(px-playerPos.x)<.8&&Math.abs(pz-playerPos.z)<.8&&py>=playerPos.y-1.7&&py<=playerPos.y+.2){toast('No puedes colocarlo ahí');return}addBlock(px,py,pz,items[selected][1],'player');}});
+    document.addEventListener('mousedown',e=>{if(!controls.isLocked)return;if(e.button===0){const hit=target();if(hit?.object.userData.items[hit.instanceId]?.type==='bedrock'){toast('La bedrock no se puede picar');return}mining=true;e.preventDefault()}if(e.button===2){
+      const hit=target();if(!hit)return;const n=hit.face.normal,item=hit.object.userData.items[hit.instanceId],px=Math.round(item.x+n.x),py=Math.round(item.y+n.y),pz=Math.round(item.z+n.z),stack=inventory[selected];
+      if(!stack){toast('Esa ranura está vacía');return}
+      if(blocks.has(key(px,py,pz))){toast('Hay un bloque ahí');return}
+      if(Math.abs(px-playerPos.x)<.8&&Math.abs(pz-playerPos.z)<.8&&py>=playerPos.y-1.7&&py<=playerPos.y+.2){toast('No puedes colocarlo ahí');return}
+      if(addBlock(px,py,pz,stack.type,'player')){stack.count--;if(stack.count===0)inventory[selected]=null;renderInventory()}
+    }});
+    document.addEventListener('mouseup',e=>{if(e.button===0){mining=false;resetMining()}});
     document.addEventListener('contextmenu',e=>e.preventDefault());
     document.addEventListener('wheel',e=>select(selected+(e.deltaY>0?1:-1)));
     function collides(px,py,pz){
@@ -156,6 +228,7 @@
         if(!collides(p.x+dx,p.y,p.z))p.x+=dx;if(!collides(p.x,p.y,p.z+dz))p.z+=dz;updateChunks(p.x,p.z);velocity.y-=22*dt;let ny=p.y+velocity.y*dt;if(velocity.y<=0&&collides(p.x,ny-.08,p.z)){velocity.y=0;onGround=true}else{onGround=false;p.y=ny}if(p.y<BEDROCK_Y-10){p.set(0,heightAt(0,0)+4,0);velocity.set(0,0,0);updateChunks(p.x,p.z);toast('Volviste al punto de inicio')}
         document.querySelector('#coords').textContent=`X ${p.x.toFixed(1)} · Y ${p.y.toFixed(1)} · Z ${p.z.toFixed(1)}`;
       }
+      updateMining(dt);
       avatar.position.set(playerPos.x,playerPos.y-1.65,playerPos.z);avatar.rotation.y=Number.isFinite(camera.rotation.y)?camera.rotation.y:0;
       water.position.x=playerPos.x;water.position.z=playerPos.z;
       if(thirdPerson){const forward=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);forward.y=0;forward.normalize();camera.position.copy(playerPos).addScaledVector(forward,-4).add(new THREE.Vector3(0,.45,0));}else camera.position.copy(playerPos);
