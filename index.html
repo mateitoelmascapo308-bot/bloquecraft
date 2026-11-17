@@ -10,6 +10,9 @@
     canvas { display: block }
     #hud { position: fixed; inset: 0; pointer-events: none; text-shadow: 0 2px 3px #18252d; }
     #top { position: absolute; top: 14px; left: 16px; }
+    #survival-stats { position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:grid;gap:5px;padding:7px 10px;background:#14202a88;border-radius:8px;min-width:190px }
+    .stat-row { display:flex;justify-content:center;gap:2px;line-height:18px;font-size:16px;letter-spacing:-2px;white-space:nowrap }
+    .stat-row .empty { filter:grayscale(1);opacity:.48 }
     #help { position: absolute; top: 14px; right: 16px; text-align: right; line-height: 1.65; background: #14202a88; padding: 9px 12px; border-radius: 8px }
     #crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%,-50%); }
     #crosshair:before, #crosshair:after { content: ''; position: absolute; background: white; box-shadow: 0 0 2px #000 }
@@ -24,10 +27,16 @@
     #mine-label { display:block;margin-bottom:4px;text-align:center }
     #mine-track { width:100%;height:7px;background:#ffffff55;border-radius:5px;overflow:hidden }
     #mine-fill { width:100%;height:100%;background:#f1d35a;transform:scaleX(0);transform-origin:left center }
-    #inventory-panel { position:fixed;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 24px));padding:18px;background:#17232af2;border:2px solid #ffffffaa;border-radius:12px;box-shadow:0 18px 70px #000a;display:none;pointer-events:auto;text-shadow:0 2px 3px #18252d }
+    #inventory-panel { position:fixed;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 24px));max-height:90vh;overflow-y:auto;padding:18px;background:#17232af2;border:2px solid #ffffffaa;border-radius:12px;box-shadow:0 18px 70px #000a;display:none;pointer-events:auto;text-shadow:0 2px 3px #18252d }
     #inventory-panel h2 { margin:0 0 5px;font-size:22px }
     #inventory-panel p { margin:0 0 14px;font-size:12px;color:#c4d4dc }
     #inventory-grid { display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px }
+    #crafting { margin-top:16px;padding-top:12px;border-top:1px solid #ffffff44 }
+    #crafting h3 { margin:0 0 8px;font-size:17px }
+    #recipe-list { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px }
+    #recipe-list button { margin:0;padding:8px;text-align:left;font-size:12px;background:#34464d;color:#fff;border:1px solid #ffffff44 }
+    #recipe-list button:disabled { opacity:.45;cursor:not-allowed }
+    #recipe-list button span {display:block;color:#d1e2e8;font-size:11px;font-weight:500;margin-top:3px}
     .inv-slot { width:100%;height:auto;aspect-ratio:1;cursor:pointer }
     .inv-slot:hover { border-color:#8ee27f;background:#ffffff35 }
     #inventory-panel button { margin-top:14px;width:100%;padding:9px;font-size:14px }
@@ -36,16 +45,17 @@
     #card { max-width: 440px; margin: 20px; padding: 26px 30px; text-align: center; border: 1px solid #ffffff66; border-radius: 14px; background: #19252aeb; box-shadow: 0 15px 60px #0008 }
     h1 { margin: 0 0 8px; font-size: 30px } p { line-height: 1.55; color: #d5e2e8 } button { pointer-events: auto; cursor: pointer; border: 0; border-radius: 8px; padding: 12px 20px; color: #172027; background: #8ee27f; font-weight: 750; font-size: 16px }
     .muted { font-size: 12px; color: #adc0ca }
-    @media (max-width:600px) { #help {font-size:11px;top:8px;right:8px;padding:6px} #top {top:8px;left:8px;font-size:12px}.slot {width:36px;height:38px;font-size:18px} #hotbar {gap:2px;padding:4px;bottom:12px} }
+    @media (max-width:600px) { #help {font-size:11px;top:8px;right:8px;padding:6px} #top {top:8px;left:8px;font-size:12px} #survival-stats {bottom:68px;min-width:160px;padding:5px 7px}.stat-row {font-size:14px}.slot {width:36px;height:38px;font-size:18px} #hotbar {gap:2px;padding:4px;bottom:12px} }
   </style>
 </head>
 <body>
   <div id="hud">
     <div id="top">🌤️ <b>Modo supervivencia</b><br>Chunks 16×16 · Bedrock Y −32<br><span id="coords"></span></div>
+    <div id="survival-stats" aria-label="Estado del jugador"><div id="health-bar" class="stat-row" aria-label="Vida"></div><div id="hunger-bar" class="stat-row" aria-label="Hambre"></div></div>
     <div id="help"><b>WASD / flechas</b> moverse · <b>Espacio</b> saltar<br><b>Mantén clic izq.</b> picar · <b>Click der.</b> colocar<br><b>1–9 / rueda</b> elegir · <b>E</b> inventario<br><b>V</b> primera/tercera persona · <b>Esc</b> liberar ratón</div>
     <div id="crosshair"></div><div id="mine-progress"><span id="mine-label"></span><div id="mine-track"><div id="mine-fill"></div></div></div><div id="toast"></div><div id="hotbar"></div>
   </div>
-  <div id="inventory-panel"><h2>Inventario</h2><p>Haz clic en una casilla para intercambiarla con la ranura seleccionada. Pulsa E o usa el botón para volver.</p><div id="inventory-grid"></div><button id="resume-game">Volver al juego</button></div>
+  <div id="inventory-panel"><h2>Inventario</h2><p>Haz clic en una casilla para intercambiarla con la ranura seleccionada. Pulsa E o usa el botón para volver.</p><div id="inventory-grid"></div><section id="crafting"><h3>Crafteo</h3><div id="recipe-list"></div></section><button id="resume-game">Volver al juego</button></div>
   <div id="overlay"><div id="card"><h1>Bloquecraft</h1><p>Explora un mundo de bloques, recoge materiales y construye a tu manera.</p><button id="start">Entrar al mundo</button><p class="muted">Funciona mejor en computador. Haz clic en el juego para volver a capturar el ratón.</p></div></div>
   <script type="importmap">
     {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}
@@ -64,7 +74,7 @@
     const chunkKey=(cx,cz)=>`${cx},${cz}`;
     const mats = {
       grass: new THREE.MeshLambertMaterial({color:0x66b447}), dirt:new THREE.MeshLambertMaterial({color:0x8c5b38}), stone:new THREE.MeshLambertMaterial({color:0x858b8e}),
-      wood:new THREE.MeshLambertMaterial({color:0x80512c}), leaves:new THREE.MeshLambertMaterial({color:0x378b3c}), sand:new THREE.MeshLambertMaterial({color:0xd8c477}), bedrock:new THREE.MeshLambertMaterial({color:0x343638}),
+      wood:new THREE.MeshLambertMaterial({color:0x80512c}), planks:new THREE.MeshLambertMaterial({color:0xb9824d}), crafting_table:new THREE.MeshLambertMaterial({color:0x98643e}), leaves:new THREE.MeshLambertMaterial({color:0x378b3c}), sand:new THREE.MeshLambertMaterial({color:0xd8c477}), bedrock:new THREE.MeshLambertMaterial({color:0x343638}),
     };
     const blocks = new Map(), chunkBlocks=new Map(), loadedChunks=new Set(), removedBlocks=new Set(), placedBlocks=new Map();
     const geo = new THREE.BoxGeometry(1,1,1), key=(x,y,z)=>`${x},${y},${z}`;
@@ -135,11 +145,29 @@
     const ray = new THREE.Raycaster(); ray.far=6; const center=new THREE.Vector2(0,0), keys={}, velocity=new THREE.Vector3(); let onGround=false, selected=0;
     const items=[
       {type:'grass',icon:'🌿',name:'Césped'}, {type:'dirt',icon:'🟫',name:'Tierra'}, {type:'stone',icon:'🪨',name:'Piedra'},
-      {type:'wood',icon:'🪵',name:'Madera'}, {type:'leaves',icon:'🍃',name:'Hojas'}, {type:'sand',icon:'🟨',name:'Arena'},
+      {type:'wood',icon:'🪵',name:'Madera'}, {type:'planks',icon:'🟫',name:'Tablones'}, {type:'stick',icon:'🥢',name:'Palos'},
+      {type:'crafting_table',icon:'🪚',name:'Mesa de crafteo'}, {type:'wooden_pickaxe',icon:'⛏️',name:'Pico de madera'}, {type:'stone_pickaxe',icon:'⚒️',name:'Pico de piedra'},
+      {type:'leaves',icon:'🍃',name:'Hojas'}, {type:'sand',icon:'🟨',name:'Arena'},
     ];
-    const inventory=Array.from({length:36},()=>null),bar=document.querySelector('#hotbar'),inventoryGrid=document.querySelector('#inventory-grid');
+    const recipes=[
+      {type:'planks',count:4,ingredients:{wood:1},name:'4 tablones',icon:'🟫'},
+      {type:'stick',count:4,ingredients:{planks:2},name:'4 palos',icon:'🥢'},
+      {type:'crafting_table',count:1,ingredients:{planks:4},name:'Mesa de crafteo',icon:'🪚'},
+      {type:'wooden_pickaxe',count:1,ingredients:{planks:3,stick:2},name:'Pico de madera',icon:'⛏️'},
+      {type:'stone_pickaxe',count:1,ingredients:{stone:3,stick:2},name:'Pico de piedra',icon:'⚒️'},
+    ];
+    const inventory=Array.from({length:36},()=>null),bar=document.querySelector('#hotbar'),inventoryGrid=document.querySelector('#inventory-grid'),recipeList=document.querySelector('#recipe-list');
     const mineBar=document.querySelector('#mine-progress'),mineFill=document.querySelector('#mine-fill'),mineLabel=document.querySelector('#mine-label');
     let mining=false,miningKey='',miningProgress=0,inventoryOpen=false,gameStarted=false;
+    let health=20,hunger=20,hungerTimer=0,starvationTimer=0,fallStartY=null;
+    const healthBar=document.querySelector('#health-bar'),hungerBar=document.querySelector('#hunger-bar');
+    function renderStats(){
+      healthBar.innerHTML=Array.from({length:10},(_,i)=>`<span class="${health<=i*2?'empty':''}">${health>=i*2+2?'❤️':health===i*2+1?'💔':'🖤'}</span>`).join('');
+      hungerBar.innerHTML=Array.from({length:10},(_,i)=>`<span class="${hunger<=i*2?'empty':''}">${hunger>=i*2+2?'🍖':hunger===i*2+1?'🥩':'🖤'}</span>`).join('');
+      healthBar.title=`Vida: ${health}/20`;hungerBar.title=`Hambre: ${hunger}/20`;
+    }
+    function damagePlayer(amount,message){health=Math.max(0,health-amount);renderStats();if(message)toast(message);if(health===0){health=20;hunger=Math.max(hunger,10);playerPos.set(0,heightAt(0,0)+4,0);velocity.set(0,0,0);onGround=false;fallStartY=null;updateChunks(playerPos.x,playerPos.z);renderStats();toast('Te desmayaste y volviste al inicio')}}
+    renderStats();
     for(let i=0;i<9;i++){const d=document.createElement('div');d.className='slot';d.dataset.hotbarSlot=i;bar.appendChild(d)}
     for(let i=9;i<36;i++){const d=document.createElement('div');d.className='inv-slot';d.dataset.inventorySlot=i;inventoryGrid.appendChild(d)}
     function select(i){selected=(i+9)%9;renderInventory();}
@@ -154,12 +182,26 @@
         el.innerHTML=`${item?item.icon:''}${stack?`<span class="slot-count">${stack.count}</span>`:''}`;
         el.title=stack?`${item.name}: ${stack.count}`:'Ranura vacía';
       });
+      renderRecipes();
     }
-    function addToInventory(type){
-      let stack=inventory.find(s=>s&&s.type===type&&s.count<64);
-      if(stack){stack.count++;renderInventory();return true}
-      const empty=inventory.findIndex(s=>!s);if(empty<0)return false;
-      inventory[empty]={type,count:1};renderInventory();return true;
+    function addToInventory(type,count=1){
+      while(count>0){let stack=inventory.find(s=>s&&s.type===type&&s.count<64);
+        if(stack){const moved=Math.min(count,64-stack.count);stack.count+=moved;count-=moved;continue}
+        const empty=inventory.findIndex(s=>!s);if(empty<0)return false;
+        const moved=Math.min(count,64);inventory[empty]={type,count:moved};count-=moved;
+      }
+      renderInventory();return true;
+    }
+    function amountOf(type){return inventory.reduce((total,stack)=>total+(stack?.type===type?stack.count:0),0)}
+    function canCraft(recipe){return Object.entries(recipe.ingredients).every(([type,count])=>amountOf(type)>=count)}
+    function renderRecipes(){
+      if(!recipeList)return;
+      recipeList.innerHTML=recipes.map((recipe,i)=>{const needs=Object.entries(recipe.ingredients).map(([type,count])=>`${items.find(item=>item.type===type)?.name||type} ${amountOf(type)}/${count}`).join(' · ');return `<button type="button" data-recipe="${i}" ${canCraft(recipe)?'':'disabled'}>${recipe.icon} ${recipe.name}<span>${needs}</span></button>`}).join('');
+    }
+    function craft(recipe){
+      if(!canCraft(recipe)){toast('Faltan materiales');return}
+      for(const [type,required] of Object.entries(recipe.ingredients)){let left=required;for(let i=0;i<inventory.length&&left>0;i++){const stack=inventory[i];if(stack?.type!==type)continue;const used=Math.min(left,stack.count);stack.count-=used;left-=used;if(stack.count===0)inventory[i]=null}}
+      if(!addToInventory(recipe.type,recipe.count))toast('Inventario lleno');else toast(`Creaste ${recipe.name}`);
     }
     function resetMining(){miningKey='';miningProgress=0;mineBar.style.display='none';mineFill.style.transform='scaleX(0)'}
     function updateMining(dt){
@@ -168,7 +210,8 @@
       const block=hit.object.userData.items[hit.instanceId];if(!block||block.type==='bedrock'){resetMining();return}
       const blockKey=key(block.x,block.y,block.z);
       if(blockKey!==miningKey){miningKey=blockKey;miningProgress=0}
-      const data=items.find(item=>item.type===block.type),duration={grass:.55,dirt:.5,stone:1.35,wood:.9,leaves:.28,sand:.45}[block.type]||.7;
+      const data=items.find(item=>item.type===block.type),baseDuration={grass:.55,dirt:.5,stone:1.35,wood:.9,leaves:.28,sand:.45,planks:.65,crafting_table:.8}[block.type]||.7;
+      const held=inventory[selected],toolBonus=held?.type==='wooden_pickaxe'&&['wood','planks','crafting_table'].includes(block.type)?2:held?.type==='stone_pickaxe'&&['stone','sand','grass','dirt'].includes(block.type)?2.5:1,duration=baseDuration/toolBonus;
       mineBar.style.display='block';mineLabel.textContent=`Picando ${data?.name||'bloque'}`;
       miningProgress=Math.min(1,miningProgress+dt/duration);mineFill.style.transform=`scaleX(${miningProgress})`;
       if(miningProgress>=1){
@@ -186,6 +229,7 @@
     controls.addEventListener('unlock',()=>{clearKeys();mining=false;resetMining();if(inventoryOpen)document.querySelector('#overlay').style.display='none';else document.querySelector('#overlay').style.display='grid'});
     document.querySelector('#resume-game').addEventListener('click',resumeGame);
     inventoryGrid.addEventListener('click',e=>{const slot=e.target.closest('[data-inventory-slot]');if(!slot)return;const i=Number(slot.dataset.inventorySlot),tmp=inventory[selected];inventory[selected]=inventory[i];inventory[i]=tmp;renderInventory()});
+    recipeList.addEventListener('click',e=>{const button=e.target.closest('[data-recipe]');if(!button)return;craft(recipes[Number(button.dataset.recipe)])});
     function pressed(...codes){return codes.some(code=>keys[code]===true)}
     function clearKeys(){for(const code in keys)keys[code]=false}
     document.addEventListener('keydown',e=>{
@@ -197,13 +241,14 @@
       if(e.code==='KeyV'&&!e.repeat){thirdPerson=!thirdPerson;avatar.visible=thirdPerson;toast(thirdPerson?'Vista en tercera persona':'Vista en primera persona')}
       const slot=/^(?:Digit|Numpad)([1-9])$/.exec(e.code);
       if(slot)select(Number(slot[1])-1);
-      if(e.code==='Space'&&onGround){velocity.y=8;onGround=false}
+      if(e.code==='Space'&&onGround){velocity.y=8;fallStartY=playerPos.y;onGround=false}
     });
     document.addEventListener('keyup',e=>keys[e.code]=false);
     addEventListener('blur',clearKeys);
     document.addEventListener('mousedown',e=>{if(!controls.isLocked)return;if(e.button===0){const hit=target();if(hit?.object.userData.items[hit.instanceId]?.type==='bedrock'){toast('La bedrock no se puede picar');return}mining=true;e.preventDefault()}if(e.button===2){
       const hit=target();if(!hit)return;const n=hit.face.normal,item=hit.object.userData.items[hit.instanceId],px=Math.round(item.x+n.x),py=Math.round(item.y+n.y),pz=Math.round(item.z+n.z),stack=inventory[selected];
       if(!stack){toast('Esa ranura está vacía');return}
+      if(!Object.hasOwn(mats,stack.type)){toast('Ese objeto no se puede colocar');return}
       if(blocks.has(key(px,py,pz))){toast('Hay un bloque ahí');return}
       if(Math.abs(px-playerPos.x)<.8&&Math.abs(pz-playerPos.z)<.8&&py>=playerPos.y-1.7&&py<=playerPos.y+.2){toast('No puedes colocarlo ahí');return}
       if(addBlock(px,py,pz,stack.type,'player')){stack.count--;if(stack.count===0)inventory[selected]=null;renderInventory()}
@@ -225,7 +270,16 @@
         const forward=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);forward.y=0;forward.normalize();const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();
         const move=forward.multiplyScalar(forwardInput).addScaledVector(right,sideInput);if(move.lengthSq())move.normalize();
         const dx=move.x*speed*dt,dz=move.z*speed*dt;
-        if(!collides(p.x+dx,p.y,p.z))p.x+=dx;if(!collides(p.x,p.y,p.z+dz))p.z+=dz;updateChunks(p.x,p.z);velocity.y-=22*dt;let ny=p.y+velocity.y*dt;if(velocity.y<=0&&collides(p.x,ny-.08,p.z)){velocity.y=0;onGround=true}else{onGround=false;p.y=ny}if(p.y<BEDROCK_Y-10){p.set(0,heightAt(0,0)+4,0);velocity.set(0,0,0);updateChunks(p.x,p.z);toast('Volviste al punto de inicio')}
+        if(!collides(p.x+dx,p.y,p.z))p.x+=dx;if(!collides(p.x,p.y,p.z+dz))p.z+=dz;updateChunks(p.x,p.z);
+        const wasGrounded=onGround;if(wasGrounded&&velocity.y<=0&&!collides(p.x,p.y-.08,p.z)&&fallStartY===null)fallStartY=p.y;
+        velocity.y-=22*dt;let ny=p.y+velocity.y*dt;
+        if(velocity.y<=0&&collides(p.x,ny-.08,p.z)){
+          velocity.y=0;onGround=true;
+          if(!wasGrounded&&fallStartY!==null){const distance=fallStartY-p.y,fallDamage=Math.max(0,Math.floor(distance-3));if(fallDamage>0)damagePlayer(fallDamage,`La caída te hizo ${fallDamage} de daño`);fallStartY=null}
+        }else{onGround=false;p.y=ny;if(velocity.y<0&&fallStartY===null)fallStartY=p.y}
+        if(move.lengthSq()>0){hungerTimer+=dt;if(hungerTimer>=45){hunger=Math.max(0,hunger-1);hungerTimer=0;renderStats()}}
+        if(hunger===0){starvationTimer+=dt;if(starvationTimer>=8){starvationTimer=0;damagePlayer(1,'El hambre te está haciendo daño')}}else starvationTimer=0;
+        if(p.y<BEDROCK_Y-10){p.set(0,heightAt(0,0)+4,0);velocity.set(0,0,0);onGround=false;fallStartY=null;updateChunks(p.x,p.z);toast('Volviste al punto de inicio')}
         document.querySelector('#coords').textContent=`X ${p.x.toFixed(1)} · Y ${p.y.toFixed(1)} · Z ${p.z.toFixed(1)}`;
       }
       updateMining(dt);
