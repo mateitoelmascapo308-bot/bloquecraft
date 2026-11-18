@@ -1,0 +1,7 @@
+#survival-stats { position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:grid;gap:5px;padding:7px 10px;background:#14202a88;border-radius:8px;min-width:190px }
+.stat-row { display:flex;justify-content:center;gap:2px;line-height:18px;font-size:16px;letter-spacing:-2px;white-space:nowrap }
+.stat-row .empty { filter:grayscale(1);opacity:.48 }
+@media (max-width: 600px) {
+  #survival-stats { bottom: 68px; min-width: 160px; padding: 5px 7px }
+  .stat-row { font-size: 14px }
+}

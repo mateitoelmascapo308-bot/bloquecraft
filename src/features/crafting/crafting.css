@@ -1,0 +1,6 @@
+#crafting { margin-top:16px;padding-top:12px;border-top:1px solid #ffffff44 }
+#crafting h3 { margin:0 0 8px;font-size:17px }
+#recipe-list { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px }
+#recipe-list button { margin:0;padding:8px;text-align:left;font-size:12px;background:#34464d;color:#fff;border:1px solid #ffffff44 }
+#recipe-list button:disabled { opacity:.45;cursor:not-allowed }
+#recipe-list button span {display:block;color:#d1e2e8;font-size:11px;font-weight:500;margin-top:3px}
